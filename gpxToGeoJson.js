@@ -1,7 +1,7 @@
 const fs = require("fs"); // File system module
 const xml2js = require("xml2js"); // XML to JSON parser
 
-const fileName = " ";
+const fileName = "test.gpx";
 
 // GPX file to convert
 const gpxFile = `./toConvert/${fileName}`;
@@ -22,7 +22,7 @@ fs.readFile(gpxFile, "utf8", (err, data) => {
 
     // Convert JSON to geoJSON
     const geoJSON = gpxToGeoJSON(json);
-
+    console.log({ geoJSON });
     // Write geoJSON to file
     fs.writeFile(`./converted/${fileName}`, geoJSON, "utf8", (err) => {
       if (err) {
@@ -37,37 +37,40 @@ fs.readFile(gpxFile, "utf8", (err, data) => {
 
 // Converts GPX data to geoJSON
 function gpxToGeoJSON(gpxData) {
-  const geoJSON = {
-    type: "FeatureCollection",
-    features: [],
-  };
-
+  let data = {};
   // Loop through tracks (usually only one)
   gpxData.gpx.trk.forEach((trk) => {
     // Loop through track segments
     trk.trkseg.forEach((trkseg) => {
       // Loop through track points
-      trkseg.trkpt.forEach((trkpt) => {
-        const feature = {
-          type: "Feature",
-          properties: {},
-          geometry: {
-            type: "Point",
-            coordinates: [parseFloat(trkpt.$.lon), parseFloat(trkpt.$.lat)],
-          },
-        };
+      const foo = trkseg.trkpt.reduce((acc, trkpt) => {
+        return [...acc, [parseFloat(trkpt.$.lon), parseFloat(trkpt.$.lat)]];
+      }, []);
 
-        // Add track point properties (if any)
-        Object.keys(trkpt).forEach((key) => {
-          if (key !== "$") {
-            feature.properties[key] = trkpt[key][0];
-          }
-        });
+      const feature = {
+        type: "Feature",
+        properties: {},
+        geometry: {
+          type: "MultiLineString",
+          coordinates: [foo],
+        },
+      };
 
-        geoJSON.features.push(feature);
-      });
+      const bar = {
+        type: "FeatureCollection",
+        features: [feature],
+      };
+      // console.log(JSON.stringify(bar));
+      data = JSON.stringify(bar);
     });
-  });
 
-  return JSON.stringify(geoJSON);
+    // Add track point properties (if any)
+    // Object.keys(trkpt).forEach((key) => {
+    //   if (key !== "$") {
+    //     feature.properties[key] = trkpt[key][0];
+    //   }
+    // });
+  });
+  console.log(data);
+  return data;
 }
