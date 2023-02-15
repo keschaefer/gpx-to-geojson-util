@@ -1,7 +1,7 @@
 const fs = require("fs"); // File system module
 const xml2js = require("xml2js"); // XML to JSON parser
 
-const fileName = "tribalCragApproachGarfieldGulch";
+const fileName = "northCrestoneCreek";
 
 // GPX file to convert
 const gpxFile = `./toConvert/${fileName}.gpx`;
@@ -74,6 +74,9 @@ function gpxToGeoJSON(gpxData) {
           elevationGain: "ft",
           estimatedTime: "",
           description: "",
+          // bestSeasons: [],
+          // rating: '',
+          // difficulty: ['easy', 'medium', 'hard']
         },
       };
 
