@@ -1,10 +1,10 @@
 const fs = require("fs"); // File system module
 const xml2js = require("xml2js"); // XML to JSON parser
 
-const fileName = "tribalCragApproachGarfieldGulch.gpx";
+const fileName = "tribalCragApproachGarfieldGulch";
 
 // GPX file to convert
-const gpxFile = `./toConvert/${fileName}`;
+const gpxFile = `./toConvert/${fileName}.gpx`;
 
 // Read GPX file
 fs.readFile(gpxFile, "utf8", (err, data) => {
@@ -24,7 +24,7 @@ fs.readFile(gpxFile, "utf8", (err, data) => {
     const geoJSON = gpxToGeoJSON(json);
     // console.log({ geoJSON });
     // Write geoJSON to file
-    fs.writeFile(`./converted/${fileName}`, geoJSON, "utf8", (err) => {
+    fs.writeFile(`./converted/${fileName}.json`, geoJSON, "utf8", (err) => {
       if (err) {
         console.log(`Error writing geoJSON file: ${err}`);
         return;
@@ -44,6 +44,7 @@ function gpxToGeoJSON(gpxData) {
         return [...acc, [parseFloat(trkpt.$.lon), parseFloat(trkpt.$.lat)]];
       }, []);
 
+      // smooth line by only included every 5th set of coordinates
       const reducedLineCoordinates = lineCoordinates.filter(
         (_, i) => i % 5 === 0
       );
@@ -57,6 +58,7 @@ function gpxToGeoJSON(gpxData) {
         },
       };
 
+      // add a point feature to use as the staring point of the hike
       const pointFeature = {
         type: "Feature",
         geometry: {
