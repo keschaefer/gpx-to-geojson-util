@@ -1,7 +1,7 @@
 const fs = require("fs"); // File system module
 const xml2js = require("xml2js"); // XML to JSON parser
 
-const fileName = "test.gpx";
+const fileName = "tribalCragApproachGarfieldGulch.gpx";
 
 // GPX file to convert
 const gpxFile = `./toConvert/${fileName}`;
@@ -22,7 +22,7 @@ fs.readFile(gpxFile, "utf8", (err, data) => {
 
     // Convert JSON to geoJSON
     const geoJSON = gpxToGeoJSON(json);
-    console.log({ geoJSON });
+    // console.log({ geoJSON });
     // Write geoJSON to file
     fs.writeFile(`./converted/${fileName}`, geoJSON, "utf8", (err) => {
       if (err) {
@@ -38,39 +38,50 @@ fs.readFile(gpxFile, "utf8", (err, data) => {
 // Converts GPX data to geoJSON
 function gpxToGeoJSON(gpxData) {
   let data = {};
-  // Loop through tracks (usually only one)
   gpxData.gpx.trk.forEach((trk) => {
-    // Loop through track segments
     trk.trkseg.forEach((trkseg) => {
-      // Loop through track points
-      const foo = trkseg.trkpt.reduce((acc, trkpt) => {
+      const lineCoordinates = trkseg.trkpt.reduce((acc, trkpt) => {
         return [...acc, [parseFloat(trkpt.$.lon), parseFloat(trkpt.$.lat)]];
       }, []);
 
-      const feature = {
+      const reducedLineCoordinates = lineCoordinates.filter(
+        (_, i) => i % 5 === 0
+      );
+
+      const lineFeature = {
         type: "Feature",
         properties: {},
         geometry: {
           type: "MultiLineString",
-          coordinates: [foo],
+          coordinates: [reducedLineCoordinates],
         },
       };
 
-      const bar = {
-        type: "FeatureCollection",
-        features: [feature],
+      const pointFeature = {
+        type: "Feature",
+        geometry: {
+          type: "Point",
+          coordinates: [
+            reducedLineCoordinates[0][0],
+            reducedLineCoordinates[0][1],
+          ],
+        },
+        properties: {
+          name: "",
+          distance: "miles",
+          elevationGain: "ft",
+          estimatedTime: "",
+          description: "",
+        },
       };
-      // console.log(JSON.stringify(bar));
-      data = JSON.stringify(bar);
-    });
 
-    // Add track point properties (if any)
-    // Object.keys(trkpt).forEach((key) => {
-    //   if (key !== "$") {
-    //     feature.properties[key] = trkpt[key][0];
-    //   }
-    // });
+      const featureCollection = {
+        type: "FeatureCollection",
+        features: [pointFeature, lineFeature],
+      };
+
+      data = JSON.stringify(featureCollection);
+    });
   });
-  console.log(data);
   return data;
 }
